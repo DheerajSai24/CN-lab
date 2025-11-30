@@ -24,9 +24,6 @@
                     <a href="about.html" class="nav-link">About</a>
                 </li>
                 <li class="nav-item">
-                    <a href="recordings.html" class="nav-link">Recordings</a>
-                </li>
-                <li class="nav-item">
                     <a href="notes.html" class="nav-link">Notes</a>
                 </li>
             </ul>
@@ -60,17 +57,22 @@
                     <img id="week-detail-image" src="" alt="Concept Diagram">
         </div>
 
-                <!-- Sub-program navigation for Week 1 -->
-                <div id="sub-program-navigation" class="hidden">
-                    <h4 id="program-title"></h4>
-                    <div class="program-nav-buttons">
-                        <button id="prev-program-btn" class="animated-button-small">&lt; Previous</button>
-                        <button id="next-program-btn" class="animated-button-small">Next &gt;</button>
-            </div>
-        </div>
+                <!-- Video Tutorials Section -->
+                <div id="video-tutorials-section" class="video-tutorials-section">
+                    <h3>📹 Video Tutorials</h3>
+                    <div class="videos-grid">
+                        <!-- Videos will be dynamically loaded here -->
+                    </div>
+                </div>
 
                 <div class="code-container">
-                    <h3>C Program</h3>
+                    <div class="code-header">
+                        <h3>C Program</h3>
+                        <button id="copy-code-btn" class="copy-button" title="Copy code">
+                            <span class="copy-icon">📋</span>
+                            <span class="copy-text">Copy</span>
+                        </button>
+                    </div>
                     <pre><code id="week-detail-code" class="language-c"></code></pre>
                 </div>
                 <div class="output-container">
@@ -94,6 +96,50 @@
                     <div id="compiler-output" class="compiler-output hidden">
                         <h4>Output:</h4>
                         <pre id="compiler-result"></pre>
+                    </div>
+                </div>
+
+                <!-- Sub-program navigation for Week 1 -->
+                <div id="sub-program-navigation" class="hidden">
+                    <h4 id="program-title"></h4>
+                    <div class="program-nav-buttons">
+                        <button id="prev-program-btn" class="animated-button-small">&lt; Previous</button>
+                        <button id="next-program-btn" class="animated-button-small">Next &gt;</button>
+                    </div>
+                </div>
+
+                <!-- Viva Questions Section -->
+                <div id="viva-questions-section" class="viva-questions-section">
+                    <h3>❓ Viva Questions & Answers</h3>
+                    <div class="viva-questions-container">
+                        <!-- Viva questions will be dynamically loaded here -->
+                    </div>
+                </div>
+
+                <!-- AI Chatbot Section -->
+                <div id="ai-chatbot-section" class="ai-chatbot-section">
+                    <h3>🤖 Ask AI Your Doubts</h3>
+                    <p class="chatbot-description">Have questions about this topic? Ask our AI assistant powered by Google Gemini!</p>
+                    <div class="chat-container">
+                        <div id="chat-messages" class="chat-messages">
+                            <div class="ai-message">
+                                <div class="message-avatar">🤖</div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your AI assistant. Ask me anything about Computer Networks topics covered in this week!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <textarea id="user-input" class="chat-input" placeholder="Type your question here..." rows="2"></textarea>
+                            <button id="send-btn" class="send-button">
+                                <span class="send-icon">📤</span>
+                                <span class="send-text">Send</span>
+                            </button>
+                        </div>
+                        <div id="chat-loading" class="chat-loading hidden">
+                            <div class="loading-spinner"></div>
+                            <span>AI is thinking...</span>
+                        </div>
                     </div>
                 </div>
 

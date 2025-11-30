@@ -19,6 +19,210 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentWeekPrograms = null;
     let currentProgramIndex = 0;
 
+    // Video data for Week 1 programs (each program has its own video)
+    const week1ProgramVideos = [
+        {
+            title: "Character Counting Method",
+            embedUrl: "https://www.youtube.com/embed/i1BPUxO63aQ?si=pDs9dDNrHn05ksaK",
+            description: "Learn how character counting works for frame delimitation, its advantages and limitations in data link layer protocols.",
+            duration: "15:30"
+        },
+        {
+            title: "Character Stuffing Technique",
+            embedUrl: "https://www.youtube.com/embed/TYJjbLZti8g?si=BFhfAMVp8Q7_2USI",
+            description: "Understand how special delimiter characters are used for framing and how to handle escape sequences in data.",
+            duration: "18:45"
+        },
+        {
+            title: "Bit Stuffing Protocol",
+            embedUrl: "https://www.youtube.com/embed/toS0RXNaTaE?si=l6rj-6o9UV4n757b",
+            description: "Deep dive into bit-level framing methods used in modern protocols like HDLC and PPP.",
+            duration: "22:10"
+        }
+    ];
+
+    // Viva questions for each week
+    const vivaQuestions = {
+        1: [
+            { q: "What is framing in the data link layer?", a: "Framing is the process of dividing the stream of bits received from the network layer into manageable data units called frames. It adds headers and trailers to identify the beginning and end of each frame." },
+            { q: "What are the different framing methods?", a: "The main framing methods are: 1) Character Count - uses a field in the header to specify the number of characters in the frame, 2) Character Stuffing - uses special characters as delimiters with escape sequences, 3) Bit Stuffing - uses special bit patterns as flags with bit insertion, and 4) Physical Layer Coding Violations." },
+            { q: "Explain character counting method.", a: "In character counting, the first field in the frame header contains the count of characters in the frame. The receiver reads this count and knows exactly how many characters follow. However, if the count is corrupted during transmission, synchronization is lost." },
+            { q: "What is character stuffing and why is it needed?", a: "Character stuffing is used when special delimiter characters (like FLAG) mark frame boundaries. If the same character appears in data, an escape character (ESC) is inserted before it. The receiver removes these escape characters. This ensures data transparency." },
+            { q: "How does bit stuffing work?", a: "Bit stuffing uses a special bit pattern (like 01111110) as a flag. Whenever five consecutive 1s appear in the data, a 0 is automatically inserted after them. The receiver removes these stuffed 0s. This is used in protocols like HDLC and PPP." },
+            { q: "What is the advantage of bit stuffing over character stuffing?", a: "Bit stuffing is more efficient as it works at the bit level and is independent of character encoding. It provides true data transparency and is used in modern protocols. Character stuffing is limited to character-oriented protocols." },
+            { q: "What happens if the delimiter character is corrupted in character stuffing?", a: "If the delimiter is corrupted, the receiver may not recognize the frame boundary, leading to frame synchronization errors. Multiple frames may be treated as one, or a single frame may be split incorrectly." },
+            { q: "Why is the character count method not reliable?", a: "If the count field itself gets corrupted during transmission, the receiver will read the wrong number of characters, causing it to lose synchronization with the sender. All subsequent frames will be misinterpreted." },
+            { q: "What is data transparency in framing?", a: "Data transparency means the data link layer can transmit any arbitrary bit pattern as data without confusion with control information. The framing method should allow any bit pattern in the payload without being mistaken for frame delimiters." },
+            { q: "Which framing method is used in HDLC protocol?", a: "HDLC (High-Level Data Link Control) uses bit stuffing with the flag pattern 01111110. It's a bit-oriented protocol that provides reliable data transfer with error detection and flow control." }
+        ],
+        2: [
+            { q: "What is CRC (Cyclic Redundancy Check)?", a: "CRC is an error detection technique that uses polynomial division. The sender divides the data by a generator polynomial and appends the remainder (CRC bits) to the data. The receiver performs the same division; if the remainder is zero, no error is detected." },
+            { q: "How does CRC detect errors?", a: "CRC treats the data as a binary polynomial. The data is divided by a predetermined generator polynomial, and the remainder becomes the CRC checksum. Any change in data during transmission will result in a different remainder at the receiver, indicating an error." },
+            { q: "What is a generator polynomial in CRC?", a: "A generator polynomial is a predetermined binary pattern used for CRC calculation. Common examples include CRC-16 (x^16 + x^15 + x^2 + 1) and CRC-32. The choice of generator polynomial determines error detection capability." },
+            { q: "Why is CRC better than simple parity checking?", a: "CRC can detect burst errors, multiple bit errors, and all single-bit errors, while simple parity can only detect odd numbers of bit errors. CRC has much stronger error detection capability with minimal overhead." },
+            { q: "What types of errors can CRC detect?", a: "CRC can detect: 1) All single-bit errors, 2) All double-bit errors, 3) Any odd number of errors, 4) All burst errors less than the degree of the polynomial, 5) Most larger burst errors with high probability." },
+            { q: "What is the difference between CRC-16 and CRC-32?", a: "CRC-16 uses a 16-bit polynomial and generates a 16-bit checksum, while CRC-32 uses a 32-bit polynomial and generates a 32-bit checksum. CRC-32 provides better error detection but requires more computation and transmission overhead." },
+            { q: "Can CRC correct errors?", a: "No, CRC is only an error detection method, not error correction. When an error is detected, the receiver typically requests retransmission of the corrupted frame. Error correction requires more complex codes like Hamming codes." },
+            { q: "What is the CRC calculation process?", a: "1) Append n zeros to the data (where n is the degree of generator polynomial), 2) Divide the extended data by the generator polynomial using binary division (XOR), 3) The remainder is the CRC, 4) Replace the appended zeros with the CRC to form the transmitted frame." },
+            { q: "Why do we use modulo-2 division in CRC?", a: "Modulo-2 division uses XOR operations instead of subtraction, making it simpler and more efficient to implement in hardware. It eliminates the need for borrow operations and makes the calculation faster." },
+            { q: "Where is CRC commonly used?", a: "CRC is widely used in: 1) Ethernet frames, 2) Storage devices (hard drives, SSDs), 3) File compression (ZIP, RAR), 4) Network protocols (TCP/IP), 5) Digital communications, due to its strong error detection and efficient implementation." }
+        ],
+        3: [
+            { q: "What is the Sliding Window Protocol?", a: "Sliding Window Protocol is a flow control mechanism that allows multiple frames to be in transit simultaneously. The sender can transmit multiple frames before receiving acknowledgment, improving channel utilization. The 'window' slides forward as acknowledgments are received." },
+            { q: "Explain Go-Back-N ARQ protocol.", a: "In Go-Back-N, the sender can transmit up to N frames without acknowledgment. If a frame is lost or corrupted, the receiver discards all subsequent frames and requests retransmission from the lost frame. The sender goes back to that frame and retransmits all frames from that point." },
+            { q: "What is the window size in sliding window protocol?", a: "Window size is the maximum number of frames that can be sent before receiving an acknowledgment. It determines the number of frames in transit. A larger window improves throughput but requires more buffer space." },
+            { q: "What happens when the window is full?", a: "When the sender's window is full, it must stop transmitting and wait for acknowledgments. As ACKs arrive, the window slides forward, allowing new frames to be sent. This prevents overwhelming the receiver." },
+            { q: "What is the difference between Go-Back-N and Selective Repeat?", a: "In Go-Back-N, when an error occurs, all frames from the error point are retransmitted. In Selective Repeat, only the corrupted or lost frame is retransmitted. Selective Repeat is more efficient but requires more complex buffering at the receiver." },
+            { q: "Why is sequence numbering required?", a: "Sequence numbers uniquely identify each frame, allowing the receiver to detect duplicates, missing frames, and out-of-order frames. They enable proper acknowledgment and help maintain synchronization between sender and receiver." },
+            { q: "What is piggybacking in data link layer?", a: "Piggybacking is a technique where acknowledgments are included in the data frames going in the reverse direction, rather than sending separate ACK frames. This reduces the number of frames transmitted and improves efficiency." },
+            { q: "What is the maximum window size for Go-Back-N?", a: "For Go-Back-N, the maximum window size is 2^m - 1, where m is the number of bits used for sequence numbers. This prevents ambiguity between new frames and retransmitted frames." },
+            { q: "What are the advantages of sliding window protocol?", a: "Advantages include: 1) Better channel utilization, 2) Continuous transmission without waiting for each ACK, 3) Improved throughput, 4) Efficient for high bandwidth-delay product networks, 5) Provides both flow control and error control." },
+            { q: "What is the timeout mechanism in Go-Back-N?", a: "The sender maintains a timer for the oldest unacknowledged frame. If the timer expires before receiving an ACK, the sender assumes the frame (or its ACK) was lost and retransmits all frames in the current window starting from that frame." }
+        ],
+        4: [
+            { q: "What is Dijkstra's algorithm used for?", a: "Dijkstra's algorithm finds the shortest path between nodes in a graph with non-negative edge weights. In networking, it's used to determine optimal routes for data packets, forming the basis of routing protocols like OSPF (Open Shortest Path First)." },
+            { q: "How does Dijkstra's algorithm work?", a: "It maintains a set of visited nodes and tentative distances. Starting from the source, it repeatedly selects the unvisited node with minimum distance, updates distances to its neighbors, and marks it as visited. The process continues until all nodes are visited or the destination is reached." },
+            { q: "What is the time complexity of Dijkstra's algorithm?", a: "Using a simple array, the time complexity is O(V²) where V is the number of vertices. With a binary heap, it's O((V + E) log V), and with a Fibonacci heap, it's O(E + V log V), where E is the number of edges." },
+            { q: "Why doesn't Dijkstra's algorithm work with negative weights?", a: "Dijkstra's algorithm assumes that once a node's shortest distance is determined, it won't change. Negative weights can violate this assumption, as a longer path might become shorter when including a negative edge. The Bellman-Ford algorithm should be used for negative weights." },
+            { q: "What data structures are used in Dijkstra's algorithm?", a: "Typically uses: 1) Priority queue or min-heap to select the node with minimum distance efficiently, 2) Array to store tentative distances, 3) Boolean array to track visited nodes, 4) Array to store the parent/predecessor for path reconstruction." },
+            { q: "What is the difference between Dijkstra's and Bellman-Ford algorithms?", a: "Dijkstra's is faster (O(V²) or O(E log V)) but works only with non-negative weights, while Bellman-Ford is slower (O(VE)) but handles negative weights and can detect negative cycles. Dijkstra uses a greedy approach; Bellman-Ford uses dynamic programming." },
+            { q: "How is Dijkstra's algorithm applied in routing protocols?", a: "In OSPF (Open Shortest Path First), each router runs Dijkstra's algorithm on the network topology to build its routing table. Routers exchange link-state information to maintain a consistent view of the network, then compute shortest paths to all destinations." },
+            { q: "What is a shortest path tree?", a: "A shortest path tree is a tree structure rooted at the source node where the path from the root to any other node is the shortest path in the original graph. Dijkstra's algorithm effectively builds this tree." },
+            { q: "Can Dijkstra's algorithm handle disconnected graphs?", a: "Yes, but nodes unreachable from the source will maintain infinite distance. The algorithm only finds shortest paths to nodes reachable from the source. The algorithm terminates when all reachable nodes are visited." },
+            { q: "What is the greedy choice in Dijkstra's algorithm?", a: "The greedy choice is always selecting the unvisited node with the minimum tentative distance. This works because with non-negative weights, the shortest path to this node cannot be improved by going through other unvisited nodes." }
+        ],
+        5: [
+            { q: "What is a broadcast tree?", a: "A broadcast tree is a spanning tree of a network that connects a source node to all other nodes while minimizing redundant paths. It ensures every node receives broadcast messages exactly once, preventing broadcast storms and optimizing bandwidth usage." },
+            { q: "Why do we need a broadcast tree?", a: "Without a broadcast tree, broadcast messages would create infinite loops and duplicate messages, consuming all network bandwidth (broadcast storm). The broadcast tree ensures each node receives the message once through the most efficient path." },
+            { q: "What is a spanning tree?", a: "A spanning tree is a subset of a graph that connects all vertices with the minimum number of edges (V-1 edges for V vertices) without forming cycles. It's used to eliminate loops in networks while maintaining connectivity." },
+            { q: "Explain the BFS approach for building a broadcast tree.", a: "Starting from the source node, BFS explores nodes level by level. Each node is visited once, and edges used during this traversal form the broadcast tree. This creates a tree where broadcast messages propagate efficiently from the source to all nodes." },
+            { q: "What is the Spanning Tree Protocol (STP)?", a: "STP is a network protocol that prevents loops in Ethernet networks by creating a spanning tree. It automatically detects and blocks redundant paths while maintaining network connectivity. If the active path fails, STP activates a backup path." },
+            { q: "What is the difference between a broadcast tree and a multicast tree?", a: "A broadcast tree includes all nodes in the network for sending to everyone. A multicast tree includes only nodes belonging to a specific multicast group. Multicast is more efficient when the message is intended for a subset of nodes." },
+            { q: "How does reverse path forwarding work?", a: "In reverse path forwarding, when a broadcast packet arrives, the router checks if it arrived on the shortest path back to the source. If yes, the packet is forwarded; if no, it's discarded. This prevents loops and duplicate messages." },
+            { q: "What is a minimum spanning tree?", a: "A minimum spanning tree (MST) is a spanning tree with the minimum total edge weight. Algorithms like Prim's and Kruskal's find MSTs. In networking, MST can minimize total link cost while maintaining connectivity." },
+            { q: "What causes broadcast storms?", a: "Broadcast storms occur when there are loops in the network topology. A broadcast message circulates indefinitely, with each switch flooding it on all ports, creating exponentially growing traffic that can overwhelm the network." },
+            { q: "How do switches prevent broadcast loops?", a: "Switches use Spanning Tree Protocol (STP) to identify and block redundant paths that could cause loops. STP runs continuously to detect topology changes and reconfigure the spanning tree automatically, maintaining a loop-free broadcast tree." }
+        ],
+        6: [
+            { q: "What is Distance Vector Routing?", a: "Distance Vector Routing is a dynamic routing algorithm where each router maintains a table (distance vector) containing the best known distance to each destination and the next hop to reach it. Routers periodically exchange their distance vectors with neighbors to converge on optimal routes." },
+            { q: "Explain the Bellman-Ford equation in routing.", a: "The Bellman-Ford equation states: dx(y) = min{c(x,v) + dv(y)} for all neighbors v of x, where dx(y) is the cost from x to y, c(x,v) is the cost from x to neighbor v, and dv(y) is v's distance to y. Each router uses this to update its routing table." },
+            { q: "What is the count-to-infinity problem?", a: "Count-to-infinity occurs when a link fails and routers slowly increment their distance to unreachable destinations until reaching infinity. This happens because routers may learn obsolete information from each other, causing slow convergence and routing loops during the transition." },
+            { q: "How does split horizon solve routing problems?", a: "Split horizon prevents a router from advertising a route back to the neighbor from which it learned that route. This helps prevent routing loops. For example, if router A learned a route through B, A won't advertise that route back to B." },
+            { q: "What is poison reverse?", a: "Poison reverse is an enhancement where instead of not advertising a route back to its source, the router advertises it with infinite metric (poisoned). This explicitly tells the source that the route is no longer valid through this path, speeding up convergence." },
+            { q: "Compare Distance Vector and Link State routing.", a: "Distance Vector: Routers know only neighbors' distances, exchange full routing tables periodically, slower convergence, less memory, prone to loops (RIP). Link State: Routers know complete topology, exchange only link status updates, faster convergence, more memory, loop-free (OSPF)." },
+            { q: "What is the routing table in Distance Vector?", a: "The routing table contains entries for each destination network with: 1) Destination address, 2) Cost/distance to reach it, 3) Next hop router, 4) Timestamp of last update. Routers use this to forward packets and exchange information with neighbors." },
+            { q: "Why is Distance Vector called 'routing by rumor'?", a: "It's called 'routing by rumor' because routers don't have direct knowledge of the entire network. They trust information received from neighbors without independent verification, relying on the accuracy of neighbors' reports about distant destinations." },
+            { q: "What is the convergence time in Distance Vector?", a: "Convergence time is the duration required for all routers to agree on optimal routes after a topology change. Distance Vector has slower convergence (seconds to minutes) compared to Link State, especially in large networks or with the count-to-infinity problem." },
+            { q: "Which protocols use Distance Vector routing?", a: "RIP (Routing Information Protocol): Uses hop count, max 15 hops, updates every 30 seconds. IGRP (Interior Gateway Routing Protocol): Cisco proprietary, uses composite metric. EIGRP (Enhanced IGRP): Hybrid protocol with Distance Vector characteristics but faster convergence." }
+        ],
+        7: [
+            { q: "What is encryption in computer networks?", a: "Encryption is the process of converting plaintext data into ciphertext using a cryptographic algorithm and a key. This makes the data unreadable to unauthorized parties during transmission, ensuring confidentiality and security in network communications." },
+            { q: "What is the difference between symmetric and asymmetric encryption?", a: "Symmetric encryption uses the same key for both encryption and decryption (e.g., AES, DES). It's faster but requires secure key exchange. Asymmetric encryption uses a public-private key pair (e.g., RSA), slower but solves key distribution, used for secure key exchange and digital signatures." },
+            { q: "Explain the Caesar cipher.", a: "Caesar cipher is a simple substitution cipher where each letter is shifted by a fixed number of positions in the alphabet. For example, with shift 3, 'A' becomes 'D', 'B' becomes 'E'. It's easy to implement but very insecure and easily broken by frequency analysis." },
+            { q: "What is a cryptographic key?", a: "A cryptographic key is a piece of information (parameter) that determines the output of a cryptographic algorithm. The security of encrypted data depends on keeping the key secret. Key length affects security: longer keys provide stronger encryption but require more computation." },
+            { q: "What is the purpose of hashing in security?", a: "Hashing creates a fixed-size digest from variable-size data, used for: 1) Data integrity verification, 2) Password storage, 3) Digital signatures, 4) Message authentication. Hash functions are one-way (cannot reverse) and collision-resistant (hard to find two inputs with same hash)." },
+            { q: "Explain public key infrastructure (PKI).", a: "PKI is a framework for managing digital certificates and public-key encryption. It includes: 1) Certificate Authorities (CA) that issue certificates, 2) Registration Authorities that verify identities, 3) Certificate repositories, 4) Certificate revocation systems. PKI enables secure online transactions and communications." },
+            { q: "What is SSL/TLS?", a: "SSL (Secure Sockets Layer) and its successor TLS (Transport Layer Security) are cryptographic protocols that provide secure communication over networks. They use asymmetric encryption for key exchange and symmetric encryption for data transfer, ensuring confidentiality, integrity, and authentication (used in HTTPS)." },
+            { q: "What is a digital signature?", a: "A digital signature is created by encrypting a message hash with the sender's private key. Recipients verify it using the sender's public key. This ensures: 1) Authentication (proves sender's identity), 2) Non-repudiation (sender can't deny), 3) Integrity (data wasn't modified)." },
+            { q: "What are the main security goals in cryptography?", a: "The CIA triad: 1) Confidentiality - only authorized parties access data, 2) Integrity - data isn't altered during transmission, 3) Availability - data is accessible when needed. Additionally: 4) Authentication - verify identities, 5) Non-repudiation - prevent denial of actions." },
+            { q: "Why is end-to-end encryption important?", a: "End-to-end encryption ensures data is encrypted on the sender's device and only decrypted on the recipient's device. Intermediate servers cannot read the content. This is crucial for privacy, protecting against: 1) Man-in-the-middle attacks, 2) Server breaches, 3) Unauthorized surveillance." }
+        ],
+        8: [
+            { q: "What is congestion control?", a: "Congestion control is a mechanism to prevent network performance degradation when traffic demand exceeds capacity. It involves monitoring network load and taking actions like reducing sending rates, dropping packets, or implementing traffic shaping to maintain network stability and fair resource allocation." },
+            { q: "Explain the Leaky Bucket algorithm.", a: "The Leaky Bucket algorithm smooths bursty traffic by maintaining a buffer (bucket) that fills with incoming packets and empties at a constant rate. If the bucket overflows, packets are dropped. This ensures output traffic is regular regardless of input pattern, useful for traffic shaping and rate limiting." },
+            { q: "What is the difference between Leaky Bucket and Token Bucket?", a: "Leaky Bucket outputs at a constant rate regardless of input, enforcing hard limits. Token Bucket allows bursts up to bucket size while maintaining average rate. Token Bucket is more flexible: tokens accumulate when idle, allowing temporary bursts, better for variable bit rate traffic." },
+            { q: "What causes network congestion?", a: "Congestion occurs when: 1) Aggregate input rate exceeds link capacity, 2) Insufficient buffer space causes packet loss, 3) Slow processors can't handle packet processing rate, 4) Multiple flows compete for bandwidth, 5) Inefficient routing concentrates traffic, 6) Sudden traffic bursts overwhelm network." },
+            { q: "What is the Token Bucket algorithm?", a: "Token Bucket uses tokens generated at a fixed rate and stored in a bucket. Packets need tokens to be transmitted. If tokens available, packet sent and token removed. If no tokens, packet queued or dropped. Allows controlled bursts (up to bucket size) while maintaining average rate." },
+            { q: "Explain TCP congestion control mechanisms.", a: "TCP uses: 1) Slow Start - exponentially increases window size, 2) Congestion Avoidance - linearly increases after threshold, 3) Fast Retransmit - retransmits on 3 duplicate ACKs, 4) Fast Recovery - reduces window by half instead of resetting. These balance throughput and congestion prevention." },
+            { q: "What is Quality of Service (QoS)?", a: "QoS ensures network resources are allocated to provide different service levels for different traffic types. Parameters include: 1) Bandwidth, 2) Latency, 3) Jitter, 4) Packet loss. QoS mechanisms prioritize critical traffic (VoIP, video) over less time-sensitive traffic (email, file transfer)." },
+            { q: "What is traffic shaping?", a: "Traffic shaping (or packet shaping) controls network traffic to optimize performance. It delays packets to conform to a desired rate profile, smooths bursts, prioritizes traffic types, and prevents congestion. Common algorithms include Leaky Bucket and Token Bucket for rate limiting." },
+            { q: "What is the difference between congestion control and flow control?", a: "Flow control is end-to-end between sender and receiver, preventing fast sender from overwhelming slow receiver (uses window size). Congestion control is network-wide, preventing network overload from all sources. Flow control is at transport layer; congestion control involves network and transport layers." },
+            { q: "What is RED (Random Early Detection)?", a: "RED is a queue management algorithm that randomly drops packets before buffer is full, based on average queue size. This signals congestion early, encouraging senders to slow down before severe congestion occurs, preventing global synchronization where all senders reduce rates simultaneously." }
+        ],
+        9: [
+            { q: "What is frame sorting?", a: "Frame sorting is the process of arranging out-of-order frames received over a network into their correct sequence before delivering to higher layers. This is necessary because frames may arrive in different order due to multiple paths, varying delays, retransmissions, or packet switching." },
+            { q: "Why do frames arrive out of order?", a: "Frames arrive out of order due to: 1) Multiple routing paths with different delays, 2) Packet retransmissions, 3) Variable network congestion, 4) Different processing times at intermediate nodes, 5) Load balancing across parallel links, 6) Priority queuing mechanisms in routers." },
+            { q: "What is a resequencing buffer?", a: "A resequencing buffer is a memory area that temporarily stores out-of-order frames until all preceding frames arrive. It maintains frames based on sequence numbers, delivers them in order to the application, and manages buffer overflow by discarding or requesting retransmission." },
+            { q: "How does TCP handle out-of-order segments?", a: "TCP maintains sequence numbers for each byte. When segments arrive out of order, TCP buffers them and sends duplicate ACKs for the last in-order segment received. When the missing segment arrives, buffered segments are delivered to the application in correct order. This ensures reliable, ordered delivery." },
+            { q: "What is the role of sequence numbers in frame sorting?", a: "Sequence numbers uniquely identify each frame, allowing the receiver to: 1) Detect missing frames, 2) Identify duplicates, 3) Determine correct order, 4) Request retransmission of missing frames, 5) Detect and discard out-of-window frames, enabling reliable ordered delivery despite network unreliability." },
+            { q: "What happens if buffer space is exhausted?", a: "When buffer space is full: 1) Incoming frames may be dropped, 2) Flow control signals sender to slow down, 3) Receiver sends NACK for missing frames, 4) TCP's receive window size is reduced to zero, 5) Retransmission timeouts may occur, potentially degrading throughput and causing delays." },
+            { q: "What is the selective acknowledgment (SACK) option?", a: "SACK allows TCP receiver to acknowledge non-contiguous blocks of data, informing sender which segments were received. This improves efficiency over basic TCP: sender only retransmits missing segments instead of all segments after a loss, especially beneficial for networks with high packet loss." },
+            { q: "How does frame sorting impact latency?", a: "Frame sorting introduces additional latency called resequencing delay - the time waiting for missing frames before delivering data to the application. This is the trade-off for reliable ordered delivery. The delay depends on: 1) Network jitter, 2) Buffer size, 3) Retransmission timeout, 4) Number of out-of-order frames." },
+            { q: "What is the head-of-line blocking problem?", a: "Head-of-line blocking occurs when a missing frame at the front of the queue blocks delivery of correctly received subsequent frames. The receiver must wait for retransmission of the missing frame before delivering any queued frames, even though later frames are ready, reducing throughput." },
+            { q: "Compare ordered vs unordered delivery.", a: "Ordered delivery (TCP): Ensures frames delivered in sent order, requires buffering and sorting, adds latency, suitable for applications needing sequence (file transfer, web). Unordered delivery (UDP): Delivers frames as received, no resequencing overhead, lower latency, suitable for real-time applications (VoIP, gaming, live streaming)." }
+        ],
+        10: [
+            { q: "What is Wireshark?", a: "Wireshark is a network protocol analyzer that captures and analyzes network traffic in real-time. It allows users to see what's happening on the network at a microscopic level, useful for: 1) Troubleshooting network problems, 2) Security analysis, 3) Protocol development, 4) Network education and forensics." },
+            { q: "What is packet capture?", a: "Packet capture (packet sniffing) is the process of intercepting and logging data packets traversing a network. Captured packets include headers and payload. Tools like Wireshark, tcpdump, or WinPcap capture packets in promiscuous mode, seeing all traffic on the network segment, not just traffic addressed to the capturing interface." },
+            { q: "What is promiscuous mode?", a: "Promiscuous mode is a network interface mode where the NIC passes all traffic to the CPU, not just frames addressed to it. Normally, NICs filter and only process frames with matching MAC addresses. Promiscuous mode is required for packet capture tools to see all network traffic." },
+            { q: "How do capture filters differ from display filters?", a: "Capture filters (BPF syntax) are applied during capture to limit what packets are saved, reducing file size and processing. Display filters are applied after capture to show subset of captured packets. Capture filters are more efficient but less flexible; display filters allow interactive analysis without recapture." },
+            { q: "What information can you see in a captured packet?", a: "Captured packets reveal: 1) Source and destination MAC/IP addresses, 2) Protocol type (TCP/UDP/ICMP), 3) Port numbers, 4) Sequence and acknowledgment numbers, 5) Flags and options, 6) Payload data, 7) Timestamps, 8) Packet size, allowing deep inspection of network communications." },
+            { q: "What is the OSI layer structure in Wireshark?", a: "Wireshark displays packets in layers matching OSI model: 1) Frame (Physical/Data Link) - Ethernet headers, 2) Network (IP) - IP addresses and routing, 3) Transport (TCP/UDP) - ports and flow control, 4) Application (HTTP/DNS/FTP) - protocol-specific data. Each layer can be expanded for detailed analysis." },
+            { q: "How can Wireshark help in troubleshooting?", a: "Wireshark helps identify: 1) Packet loss and retransmissions, 2) High latency and delays, 3) Connectivity issues, 4) Routing problems, 5) Protocol errors, 6) Performance bottlenecks, 7) Security threats, 8) Misconfigured devices. It provides visibility into actual network behavior versus expected behavior." },
+            { q: "What is a three-way handshake and how to see it in Wireshark?", a: "TCP three-way handshake establishes connections: 1) Client sends SYN, 2) Server responds with SYN-ACK, 3) Client sends ACK. In Wireshark, filter 'tcp.flags.syn==1' to see these packets. The sequence shows connection establishment, initial sequence numbers, and window sizes." },
+            { q: "What security issues can Wireshark detect?", a: "Wireshark can detect: 1) Unencrypted passwords (HTTP, FTP, Telnet), 2) Man-in-the-middle attacks, 3) ARP spoofing, 4) Port scanning, 5) Suspicious traffic patterns, 6) Malware communications, 7) DNS poisoning, 8) DoS attacks. However, encrypted traffic (HTTPS) shows only headers, not content." },
+            { q: "What are common Wireshark filters?", a: "Common filters: 'ip.addr==192.168.1.1' (specific IP), 'tcp.port==80' (HTTP traffic), 'http' (HTTP only), 'dns' (DNS queries), 'tcp.flags.syn==1' (TCP connections), 'icmp' (ping), 'tcp.analysis.retransmission' (retransmits), 'frame.time_delta>1' (delayed packets). These help focus on relevant traffic." }
+        ]
+    };
+
+    // Video data for other weeks (one video per week)
+    const weekVideos = {
+        2: {
+            title: "CRC Algorithm Implementation",
+            embedUrl: "https://www.youtube.com/embed/A9g6rTMblz4?si=Ws-VeOJOuV7Yq93P",
+            description: "Master Cyclic Redundancy Check with polynomial mathematics and practical implementation examples for error detection.",
+            duration: "25:30"
+        },
+        3: {
+            title: "Go-Back-N Sliding Window Protocol",
+            embedUrl: "https://www.youtube.com/embed/LnbvhoxHn8M?si=zMdlidRKd1BRjfG-",
+            description: "Learn advanced flow control mechanisms with pipelined transmission and window-based error recovery strategies.",
+            duration: "28:15"
+        },
+        4: {
+            title: "Dijkstra's Shortest Path for Networks",
+            embedUrl: "https://www.youtube.com/embed/bZkzH5x0SKU?si=GiLyogY2vs8a9A7v",
+            description: "Learn the classic algorithm for finding optimal routes in network topology and its applications in routing protocols.",
+            duration: "24:45"
+        },
+        5: {
+            title: "Broadcast Tree Construction",
+            embedUrl: "https://www.youtube.com/embed/UHRPtNZ_Rz4?si=q-VHgxwWLtjFFn2e",
+            description: "Understand spanning tree algorithms for efficient broadcast communication and prevention of broadcast storms in subnets.",
+            duration: "20:30"
+        },
+        6: {
+            title: "Distance Vector Routing Protocol",
+            embedUrl: "https://www.youtube.com/embed/hdpnoOcrGck?si=vRFYTYVq5WYGjnb-",
+            description: "Master distributed routing algorithms with Bellman-Ford equation and understand convergence properties and limitations.",
+            duration: "32:20"
+        },
+        7: {
+            title: "Network Security Encryption",
+            embedUrl: "https://www.youtube.com/embed/4KiwoeDJFiA?si=IV3sXp0_BHsdp1aP",
+            description: "Learn fundamental encryption and decryption techniques for securing data transmission in computer networks.",
+            duration: "18:45"
+        },
+        8: {
+            title: "Leaky Bucket Algorithm",
+            embedUrl: "https://www.youtube.com/embed/zjfPh7sar_Y?si=LowF0BGNw1Np2aPz",
+            description: "Master traffic shaping techniques for congestion control and understand Quality of Service (QoS) implementations.",
+            duration: "26:10"
+        },
+        9: {
+            title: "Frame Sorting and Buffer Management",
+            embedUrl: "https://www.youtube.com/embed/NhpzBldHOYo?si=nkvDRGnSVaivyEka",
+            description: "Learn advanced buffer management strategies for handling out-of-order frames in network communication protocols.",
+            duration: "22:35"
+        },
+        10: {
+            title: "Network Packet Analysis with Wireshark",
+            embedUrl: "https://www.youtube.com/embed/qTaOZrDnMzQ?si=l0pEfz845lCaE_sr",
+            description: "Master network troubleshooting and security analysis using packet capture tools and protocol analysis techniques.",
+            duration: "35:20"
+        }
+    };
+
     // Mobile menu toggle
     if (hamburger && navMenu) {
         hamburger.addEventListener('click', () => {
@@ -1116,6 +1320,113 @@ and the theoretical foundations of tools like Wireshark.`
     // Call renderWeekCards on initial load
     renderWeekCards();
 
+    // Function to render a single video for Week 1 programs
+    function renderWeek1ProgramVideo(programIndex) {
+        const videoSection = document.getElementById('video-tutorials-section');
+        const videosGrid = videoSection.querySelector('.videos-grid');
+        
+        if (week1ProgramVideos[programIndex]) {
+            videoSection.style.display = 'block';
+            videosGrid.innerHTML = '';
+            
+            const video = week1ProgramVideos[programIndex];
+            const videoCard = document.createElement('div');
+            videoCard.className = 'video-card';
+            videoCard.innerHTML = `
+                <div class="video-wrapper">
+                    <iframe 
+                        width="560" 
+                        height="315" 
+                        src="${video.embedUrl}" 
+                        title="${video.title}"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerpolicy="strict-origin-when-cross-origin" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-info">
+                    <h4>${video.title}</h4>
+                    <p>${video.description}</p>
+                    <div class="video-meta">
+                        <span class="duration">⏱️ ${video.duration}</span>
+                    </div>
+                </div>
+            `;
+            videosGrid.appendChild(videoCard);
+        } else {
+            videoSection.style.display = 'none';
+        }
+    }
+    
+    // Function to render viva questions
+    function renderVivaQuestions(weekNum) {
+        const vivaSection = document.getElementById('viva-questions-section');
+        const vivaContainer = vivaSection.querySelector('.viva-questions-container');
+        
+        if (vivaQuestions[weekNum]) {
+            vivaSection.style.display = 'block';
+            vivaContainer.innerHTML = '';
+            
+            vivaQuestions[weekNum].forEach((item, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'viva-item';
+                questionItem.innerHTML = `
+                    <div class="viva-question">
+                        <span class="question-number">Q${index + 1}.</span>
+                        <span class="question-text">${item.q}</span>
+                    </div>
+                    <div class="viva-answer">
+                        <span class="answer-label">Answer:</span>
+                        <span class="answer-text">${item.a}</span>
+                    </div>
+                `;
+                vivaContainer.appendChild(questionItem);
+            });
+        } else {
+            vivaSection.style.display = 'none';
+        }
+    }
+
+    // Function to render videos for other weeks (single video per week)
+    function renderVideos(weekNum) {
+        const videoSection = document.getElementById('video-tutorials-section');
+        const videosGrid = videoSection.querySelector('.videos-grid');
+        
+        if (weekVideos[weekNum]) {
+            videoSection.style.display = 'block';
+            videosGrid.innerHTML = '';
+            
+            const video = weekVideos[weekNum];
+            const videoCard = document.createElement('div');
+            videoCard.className = 'video-card';
+            videoCard.innerHTML = `
+                <div class="video-wrapper">
+                    <iframe 
+                        width="560" 
+                        height="315" 
+                        src="${video.embedUrl}" 
+                        title="${video.title}"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        referrerpolicy="strict-origin-when-cross-origin" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-info">
+                    <h4>${video.title}</h4>
+                    <p>${video.description}</p>
+                    <div class="video-meta">
+                        <span class="duration">⏱️ ${video.duration}</span>
+                    </div>
+                </div>
+            `;
+            videosGrid.appendChild(videoCard);
+        } else {
+            videoSection.style.display = 'none';
+        }
+    }
+
     // Function to display details of a specific program within Week 1
     function displayProgramDetails(programIndex) {
         if (!currentWeekPrograms || programIndex < 0 || programIndex >= currentWeekPrograms.length) {
@@ -1147,6 +1458,15 @@ and the theoretical foundations of tools like Wireshark.`
         // Update navigation button states
         prevProgramBtn.disabled = programIndex === 0;
         nextProgramBtn.disabled = programIndex === currentWeekPrograms.length - 1;
+        
+        // Render the corresponding video for this Week 1 program
+        renderWeek1ProgramVideo(programIndex);
+        
+        // Render viva questions for Week 1
+        renderVivaQuestions(1);
+        
+        // Update chatbot context for Week 1
+        updateChatbotContext(1);
     }
 
     // Modified function to display details of a specific week
@@ -1187,6 +1507,15 @@ and the theoretical foundations of tools like Wireshark.`
                      outputContainer.style.display = 'block';
                      compilerContainer.style.display = 'block';
                  }
+                 
+                 // Render videos for the current week
+                 renderVideos(weekNum);
+                 
+                 // Render viva questions for the current week
+                 renderVivaQuestions(weekNum);
+                 
+                 // Update chatbot context
+                 updateChatbotContext(weekNum);
             }
             showPage(weekDetailsPage);
         }
@@ -1216,6 +1545,167 @@ and the theoretical foundations of tools like Wireshark.`
         }
     });
 
+    // AI Chatbot functionality
+    const GEMINI_API_KEY = 'AIzaSyDptw2oj4UWTOtdHml5144ixlbsE-z0eV0';
+    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    
+    let currentWeekTopic = '';
+    
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatLoading = document.getElementById('chat-loading');
+    
+    // Function to format AI response with proper markdown-like styling
+    function formatAIResponse(text) {
+        // Replace **bold** with <strong>
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Replace *italic* with <em>
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Replace numbered lists (1. 2. 3.)
+        text = text.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+        
+        // Replace bullet points (*, -, •)
+        text = text.replace(/^[\*\-•]\s+(.+)$/gm, '<li>$1</li>');
+        
+        // Wrap consecutive <li> items in <ul>
+        text = text.replace(/(<li>.*?<\/li>\s*)+/gs, '<ul>$&</ul>');
+        
+        // Replace headers (##, ###)
+        text = text.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>');
+        text = text.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+        
+        // Replace code blocks with backticks
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Split into paragraphs (double line breaks)
+        const paragraphs = text.split('\n\n');
+        text = paragraphs.map(p => {
+            p = p.trim();
+            if (p.startsWith('<ul>') || p.startsWith('<h3>') || p.startsWith('<h4>')) {
+                return p;
+            }
+            return p ? `<p>${p}</p>` : '';
+        }).join('');
+        
+        return text;
+    }
+    
+    // Function to add message to chat
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isUser ? 'user-message' : 'ai-message';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = isUser ? '👤' : '🤖';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        // Format AI responses, keep user messages plain
+        if (isUser) {
+            messageContent.innerHTML = `<p>${content}</p>`;
+        } else {
+            messageContent.innerHTML = formatAIResponse(content);
+        }
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Function to call Gemini API
+    async function askGemini(question) {
+        try {
+            const contextPrompt = currentWeekTopic 
+                ? `You are a helpful Computer Networks tutor. The student is studying "${currentWeekTopic}". Answer their question clearly and concisely. Question: ${question}`
+                : `You are a helpful Computer Networks tutor. Answer this question clearly and concisely: ${question}`;
+            
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: contextPrompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 500
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const aiResponse = data.candidates[0].content.parts[0].text;
+            return aiResponse;
+            
+        } catch (error) {
+            console.error('Gemini API Error:', error);
+            return "I'm sorry, I encountered an error. Please try again or rephrase your question.";
+        }
+    }
+    
+    // Function to handle sending message
+    async function handleSendMessage() {
+        const question = userInput.value.trim();
+        
+        if (!question) return;
+        
+        // Add user message
+        addMessage(question, true);
+        userInput.value = '';
+        
+        // Show loading
+        chatLoading.classList.remove('hidden');
+        sendBtn.disabled = true;
+        
+        // Get AI response
+        const response = await askGemini(question);
+        
+        // Hide loading
+        chatLoading.classList.add('hidden');
+        sendBtn.disabled = false;
+        
+        // Add AI response
+        addMessage(response, false);
+    }
+    
+    // Event listeners for chatbot
+    if (sendBtn) {
+        sendBtn.addEventListener('click', handleSendMessage);
+    }
+    
+    if (userInput) {
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    }
+    
+    // Function to update chatbot context based on current week
+    function updateChatbotContext(weekNum) {
+        const week = weeksData[weekNum];
+        if (week) {
+            currentWeekTopic = `Week ${weekNum}: ${week.title}`;
+        }
+    }
+
     // Simple C Compiler Functionality
     const cCodeEditor = document.getElementById('c-code-editor');
     const runCodeBtn = document.getElementById('run-code-btn');
@@ -1223,6 +1713,7 @@ and the theoretical foundations of tools like Wireshark.`
     const compilerOutput = document.getElementById('compiler-output');
     const compilerResult = document.getElementById('compiler-result');
     const lineNumbers = document.getElementById('line-numbers');
+    const copyCodeBtn = document.getElementById('copy-code-btn');
 
     // Utility function to clear compiler
     function clearCompiler() {
@@ -1311,6 +1802,69 @@ int main() {
     clearCodeBtn.addEventListener('click', () => {
         clearCompiler();
     });
+
+    // Copy code button functionality
+    if (copyCodeBtn) {
+        copyCodeBtn.addEventListener('click', async () => {
+            const codeText = document.getElementById('week-detail-code').textContent;
+            
+            if (!codeText || codeText.trim() === '') {
+                // Show error feedback
+                const originalHTML = copyCodeBtn.innerHTML;
+                copyCodeBtn.innerHTML = '<span class="copy-icon">⚠️</span><span class="copy-text">No Code</span>';
+                setTimeout(() => {
+                    copyCodeBtn.innerHTML = originalHTML;
+                }, 2000);
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(codeText);
+                
+                // Show success feedback
+                const originalHTML = copyCodeBtn.innerHTML;
+                copyCodeBtn.classList.add('copied');
+                copyCodeBtn.innerHTML = '<span class="copy-icon">✓</span><span class="copy-text">Copied!</span>';
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyCodeBtn.classList.remove('copied');
+                    copyCodeBtn.innerHTML = originalHTML;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy code:', err);
+                
+                // Fallback for older browsers
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = codeText;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    // Show success feedback
+                    const originalHTML = copyCodeBtn.innerHTML;
+                    copyCodeBtn.classList.add('copied');
+                    copyCodeBtn.innerHTML = '<span class="copy-icon">✓</span><span class="copy-text">Copied!</span>';
+                    
+                    setTimeout(() => {
+                        copyCodeBtn.classList.remove('copied');
+                        copyCodeBtn.innerHTML = originalHTML;
+                    }, 2000);
+                } catch (fallbackErr) {
+                    // Show error feedback
+                    const originalHTML = copyCodeBtn.innerHTML;
+                    copyCodeBtn.innerHTML = '<span class="copy-icon">❌</span><span class="copy-text">Failed</span>';
+                    setTimeout(() => {
+                        copyCodeBtn.innerHTML = originalHTML;
+                    }, 2000);
+                }
+            }
+        });
+    }
 
     // Function to show compiler result
     function showCompilerResult(message, type) {
