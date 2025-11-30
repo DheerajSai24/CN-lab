@@ -112,23 +112,25 @@ body {
 }
 
 .nav-container {
-    max-width: 1200px;
+    width: auto;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 4rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 70px;
+    gap: 2rem;
 }
 
 .nav-logo {
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: var(--accent-color-1);
     text-transform: uppercase;
-    letter-spacing: 0.1rem;
+    letter-spacing: 0.03rem;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .nav-menu {
@@ -219,6 +221,16 @@ body {
 
 /* Mobile Navigation */
 @media screen and (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+        gap: 1rem;
+    }
+
+    .nav-logo {
+        font-size: 0.85rem;
+        letter-spacing: 0.01rem;
+    }
+
     .nav-menu {
         position: fixed;
         left: -100%;
@@ -277,14 +289,15 @@ body {
 
 /* Main Content Area */
 main {
-    width: 90%;
-    max-width: 1200px;
-    padding: 2rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 2rem 4rem;
     background-color: var(--bg-secondary);
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    margin-bottom: 3rem;
-    border: 1px solid var(--border-color);
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
 }
 
 /* Week Cards Grid */
@@ -481,6 +494,8 @@ main {
 #week-details-page {
     padding: 2.5rem;
     animation: none; /* No animations on entry */
+    max-width: 100%;
+    width: 100%;
 }
 
 #week-detail-title {
@@ -525,6 +540,75 @@ main {
     line-height: 1.7;
     margin-bottom: 1rem;
     color: var(--text-primary);
+}
+
+/* Week Overview Section */
+.week-overview {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.8rem;
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+.week-overview .overview-heading {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent-color-1);
+    margin: 1.2rem 0 0.8rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.week-overview .overview-heading:first-child {
+    margin-top: 0;
+}
+
+.week-overview .overview-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+}
+
+.week-overview .overview-list li {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    padding: 0.4rem 0 0.4rem 1.8rem;
+    position: relative;
+}
+
+.week-overview .overview-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: bold;
+}
+
+.week-overview .overview-list.advantages li::before {
+    content: '✓';
+    color: #4CAF50;
+    font-size: 1.1rem;
+}
+
+.week-overview .overview-list.disadvantages li::before {
+    content: '✗';
+    color: #f44336;
+    font-size: 1.1rem;
+}
+
+.week-overview .overview-list.use-cases li::before {
+    content: '▸';
+    color: var(--accent-color-2);
 }
 
 .image-container {

@@ -3,6 +3,9 @@
 .env.local
 .env.production
 
+# Sensitive documentation
+REACT_CONVERSION_COMPLETE.md
+
 # Node modules
 node_modules/
 npm-debug.log*
