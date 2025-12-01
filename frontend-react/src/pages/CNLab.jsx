@@ -177,7 +177,7 @@ function CNLab() {
     setCompilerOutput('');
   };
 
-  const GEMINI_API_KEY = 'AIzaSyBMTLCy0sA41V-gd4RRQEQ1Xkc213QGuAk';
+  const GEMINI_API_KEY = 'AIzaSyBQr5Gx-ovOf0xF0FNUAMk3Fd9BslSW9Ac';
   const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
   const formatAIResponse = (text) => {
